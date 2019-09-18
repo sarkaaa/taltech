@@ -54,7 +54,7 @@ router ospf 1
 network 192.168.3.0 0.0.0.255 area 0
 network 10.2.2.0 0.0.0.3 area 0
 exit
-ospf 1
+router ospf 1
 passive-interface g0/1
 show ip ospf neighbor
 ```
