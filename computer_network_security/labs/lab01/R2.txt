@@ -1,0 +1,36 @@
+enable
+conf t
+hostname R2
+
+line con 0
+! prevent telnet when type sh-t command
+transport preferred none
+exit
+
+interface serial 0/0/0
+ip address 10.1.1.2 255.255.255.252
+no shutdown
+clock rate 64000
+exit
+
+interface serial 0/0/1
+ip address 10.2.2.2 255.255.255.252
+no shutdown
+exit
+
+router ospf 1
+network 10.1.1.0 0.0.0.3 area 0
+network 10.2.2.0 0.0.0.3 area 0
+exit
+
+
+
+
+________________passwords_____________
+line aux 0 - ciscoauxpass
+line vty 0 4 - ciscovtypassword
+user01 - user01pass
+enable - cisco12345
+admin - cisco12345
+
+

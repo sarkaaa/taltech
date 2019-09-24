@@ -1,0 +1,145 @@
+PART 2:
+R3(config)#security passwords min-length 10
+R3(config)#enable algorithm-type scrypt secret cisco12345
+
+R3(config)#line console 0
+
+R3(config-line)#password ciscocon
+% Invalid Password length - must contain 10 to 25 characters. Password configuration failed
+
+R3(config-line)#password ciscoconpass
+
+
+R3(config-line)#login
+R3(config-line)#logging synchronous
+exit
+R3(config)#line aux 0
+R3(config-line)#password ciscoauxpass
+R3(config-line)#exec-timeout 5 0
+R3(config-line)#login
+
+R3(config)#line vty
+R3(config)#line vty 0 4
+R3(config-line)#pass
+R3(config-line)#password ciscovtypass
+R3(config-line)#exec-timeout 5 0
+R3(config-line)#transport input telnet
+R3(config-line)#login
+
+R3(config)#service password-encryption
+
+R3(config)#banner motd $Unauthorized access strictly prohibited!$
+
+^C
+
+
+  md5     Encode the password using the MD5 algorithm
+  scrypt  Encode the password using the SCRYPT hashing algorithm
+  sha256  Encode the password using the PBKDF2 hashing algorithm
+
+R3(config)#username user01 algorithm-type scrypt secret user01pass
+
+
+R3#copy running-config startup-config
+
+username user01 secret 9 $9$d2YRdpleKc1tUU$3Fa6UEUw0jc/M.F9rmVGiFk0X44dqsSMK8w5K1Qte76
+
+
+
+R3(config)#line vty 0 4
+
+R3(config-line)#login local
+
+cisco12345
+
+R3(config)#line aux 0
+R3(config-line)#login local
+
+PART 4:
+
+R3(config)#ip domain-name ccnasecurity.com
+R3(config)#username admin privilege 15 algorithm-type scrypt secret cisco12345
+
+I skipped
+R3(config)#line vty 0 4
+R3(config-line)#privilege level 15
+R3(config-line)#login local
+R3(config-line)#transport input ssh
+
+R3(config)#crypto key zeroize rsa
+% No Signature Keys found in configuration.
+
+R3(config)#crypto key generate rsa general-keys modulus 1024
+R3(config)#ip ssh version 2
+R3(config)#exit
+
+SSH v: 2.0
+authen. timeout: 120s
+authen. retries: 3
+
+ip ssh time-out 90
+ip ssh authentication-retries 2
+exit
+copy running-config startup-config
+
+PART 5:
+show users
+
+
+   0 con 0     admin      idle                 00:01:27
+*388 vty 0     admin      idle                 00:00:00 192.168.3.3
+
+aaa new-model
+aaa authentication login default local
+aaa authorization exec default local
+ip scp server enable
+
+show flash:
+copy scp: flash:
+
+copy running-config startup-config
+
+enable view
+cisco12345
+
+parser view admin1
+secret admin1pass
+
+commands exec include all show
+commands exec include all config terminal
+commands exec include all debug
+
+enable view admin1
+admin1pass
+
+enable view
+cisco12345
+
+conf t
+parser view admin2
+secret admin2pass
+commands exec include all show
+end
+enable view admin2
+admin2pass
+show parser view
+
+enable view
+cisco12345
+
+conf t
+parser view tech
+secret techpasswd
+
+commands exec include show version
+commands exec include show interfaces
+
+commands exec include show ip interface brief
+commands exec include show parser view
+end
+
+enable view tech
+techpasswd
+
+enable view
+cisco12345
