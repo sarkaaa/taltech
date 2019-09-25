@@ -1,4 +1,9 @@
 !## PART 1 ##
+
+
+!!! Think to set a static IP !!!
+
+
 enable
 config t
 hostname R1
@@ -51,6 +56,10 @@ service password-encryption
 banner motd $Unauthorized access strictly prohibited!$
 username user01 algorithm-type scrypt secret user01pass
 
+line console 0
+login local
+exit
+
 line vty 0 4
 login local
 exit
@@ -84,4 +93,55 @@ ip ssh time-out 90
 ip ssh authentication-retries 2
 
 
-## PART 3 ##
+!## PART 3 ##
+
+!## PART 4##
+
+config t
+ip access-list standard PERMIT-SNMP
+snmp-server view SNMP-RO iso included
+snmp-server group SNMP-G1 v3 priv read SNMP-RO access PERMIT-SNMP
+snmp-server user SNMP-Admin SNMP-G1 v3 auth sha Authpass priv aes 128 Encrypted
+
+ntp authentication-key 1 md5 NTPpassword
+ntp trusted-key 1
+ntp-authenticate
+
+ntp server 10.1.1.2
+ntp update-calendar
+exit
+
+show ntp associations
+debug ntp all
+
+undebug all
+show clock
+
+config t
+service timestamps log datetime msec
+logging host 192.168.1.1
+logging trap warnings
+
+
+!## PART 5 ##
+
+configure t
+key chain NetAcad
+key 1
+key-string CCNASkeystring
+cryptographic-algorithm hmac-sha-256
+exit
+exit
+
+interface s0/0/0
+ip ospf authentication key-chain NetAcad
+end
+
+
+
+
+
+
+
+
+

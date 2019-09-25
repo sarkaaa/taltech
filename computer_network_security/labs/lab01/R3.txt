@@ -1,120 +1,92 @@
-PART 2:
-R3(config)#security passwords min-length 10
-R3(config)#enable algorithm-type scrypt secret cisco12345
-
-R3(config)#line console 0
-
-R3(config-line)#password ciscocon
-% Invalid Password length - must contain 10 to 25 characters. Password configuration failed
-
-R3(config-line)#password ciscoconpass
-
-
-R3(config-line)#login
-R3(config-line)#logging synchronous
+enable
+conf t
+hostname R3
+interface g0/1
+ip address 192.168.3.1 255.255.255.0
+no shutdown
 exit
-R3(config)#line aux 0
-R3(config-line)#password ciscoauxpass
-R3(config-line)#exec-timeout 5 0
-R3(config-line)#login
-
-R3(config)#line vty
-R3(config)#line vty 0 4
-R3(config-line)#pass
-R3(config-line)#password ciscovtypass
-R3(config-line)#exec-timeout 5 0
-R3(config-line)#transport input telnet
-R3(config-line)#login
-
-R3(config)#service password-encryption
-
-R3(config)#banner motd $Unauthorized access strictly prohibited!$
-
-^C
+interface s0/0/1
+ip address 10.2.2.1 255.255.255.252
+no shutdown
+clock rate 64000
+exit
+no ip domain-lookup
+router ospf 1
+network 192.168.3.0 0.0.0.255 area 0
+network 10.2.2.0 0.0.0.3 area 0
+exit
+router ospf 1
+passive-interface g0/1
+show ip ospf neighbour
 
 
-  md5     Encode the password using the MD5 algorithm
-  scrypt  Encode the password using the SCRYPT hashing algorithm
-  sha256  Encode the password using the PBKDF2 hashing algorithm
-
-R3(config)#username user01 algorithm-type scrypt secret user01pass
-
-
-R3#copy running-config startup-config
-
-username user01 secret 9 $9$d2YRdpleKc1tUU$3Fa6UEUw0jc/M.F9rmVGiFk0X44dqsSMK8w5K1Qte76
-
-
-
-R3(config)#line vty 0 4
-
-R3(config-line)#login local
-
-cisco12345
-
-R3(config)#line aux 0
-R3(config-line)#login local
-
-PART 4:
-
-R3(config)#ip domain-name ccnasecurity.com
-R3(config)#username admin privilege 15 algorithm-type scrypt secret cisco12345
-
-I skipped
-R3(config)#line vty 0 4
-R3(config-line)#privilege level 15
-R3(config-line)#login local
-R3(config-line)#transport input ssh
-
-R3(config)#crypto key zeroize rsa
-% No Signature Keys found in configuration.
-
-R3(config)#crypto key generate rsa general-keys modulus 1024
-R3(config)#ip ssh version 2
-R3(config)#exit
-
-SSH v: 2.0
-authen. timeout: 120s
-authen. retries: 3
-
+exit
+security passwords min-length 10
+enable algorithm-type scrypt secret cisco12345
+line console 0
+password ciscoconpass
+login
+logging synchronous
+exit
+line aux 0
+password ciscoauxpass
+exec-timeout 5 0
+login
+line vty 0 4
+password ciscovtypass
+exec-timeout 5 0
+transport input telnet
+login
+service password-encryption
+banner motd $Unauthorized access strictly prohibited!$
+username user01 algorithm-type scrypt secret user01pass
+exit
+copy running-config startup-config
+conf t
+line vty 0 4
+login local
+line aux 0
+login local
+ip domain-name ccnasecurity.com
+line vty 0 4
+privilege level 15
+login local
+transport input ssh
+crypto key zeroize rsa
+crypto key generate rsa general-keys modulus 1024
+ip ssh version 2
+conf t
 ip ssh time-out 90
 ip ssh authentication-retries 2
 exit
 copy running-config startup-config
-
-PART 5:
 show users
-
-
-   0 con 0     admin      idle                 00:01:27
-*388 vty 0     admin      idle                 00:00:00 192.168.3.3
-
+conf t
 aaa new-model
 aaa authentication login default local
 aaa authorization exec default local
 ip scp server enable
-
-show flash:
+exit
 copy scp: flash:
-
-copy running-config startup-config
-
 enable view
 cisco12345
-
+parser view admin1
+exit
+exit
+enable view
+cisco12345
+conf t
 parser view admin1
 secret admin1pass
-
 commands exec include all show
 commands exec include all config terminal
 commands exec include all debug
-
+exit
+exit
 enable view admin1
 admin1pass
-
 enable view
 cisco12345
-
 conf t
 parser view admin2
 secret admin2pass
@@ -123,23 +95,81 @@ end
 enable view admin2
 admin2pass
 show parser view
-
 enable view
 cisco12345
-
 conf t
 parser view tech
 secret techpasswd
-
 commands exec include show version
 commands exec include show interfaces
-
 commands exec include show ip interface brief
 commands exec include show parser view
 end
-
 enable view tech
 techpasswd
-
 enable view
 cisco12345
+
+show flash:
+dir
+conf t
+secure boot-image
+secure boot-config
+exit
+show secure bootset
+conf t
+no secure boot-image
+no secure boot-config
+do show flash:
+ip access-list standard PERMIT-SNMP
+permit 192.168.1.0 0.0.0.255
+exit
+snmp-server view SNMP-RO iso included
+snmp-server group SNMP-G1 v3 priv read SNMP-RO access PERMIT-SNMP
+snmp-server user SNMP-Admin SNMP-G1 v3 auth sha Authpass priv aes 128 Encrypass
+end
+show snmp group
+show snmp user
+
+
+conf t
+ntp authentication-key 1 md5 NTPpassword
+ntp trusted-key 1
+ntp authenticate
+ntp server 10.1.1.2
+ntp update-calendar
+exit
+show ntp associations
+debug ntp all
+undebug all
+show clock
+
+***
+conf t
+key chain NetAcad
+key 1
+key-string CCNASkeystring
+cryptographic-algorithm hmac-sha-256
+exit
+
+interface s0/0/1
+ip ospf authentication key-chain NetAcad
+end
+
+show ip route
+
+ping 192.168.1.1
+auto secure
+
+** yes
+** [enter]
+** Serial0/0/1
+** # Unathorized Access prohibited #
+** cisco67890
+** cisco67890
+** 60
+** 2
+** 30
+** [enter]
+** no
+** [enter]
