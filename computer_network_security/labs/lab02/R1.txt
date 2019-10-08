@@ -1,0 +1,44 @@
+enable
+configure terminal
+hostname R1
+no ip domain-lookup
+
+interface serial 0/0/0
+clock rate 64000
+ip address 10.1.1.1 255.255.255.252
+no shutdown
+exit
+
+interface GigabitEthernet 0/1
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+exit
+
+ip route 0.0.0.0 0.0.0.0 10.1.1.2
+
+security passwords min-length 10
+enable algorithm-type scrypt secret cisco12345
+
+line console 0
+password ciscoconpass
+exec-timeout 5 0
+login
+logging synchronous
+exit
+
+line aux 0
+password ciscoauxpass
+exec-timeout 5 0
+login
+exit
+
+line vty 0 4
+password ciscovtypass
+exec-timeout 5 0
+login
+exit
+
+service password-encryption
+
+banner motd $Unauthorized access strictly prohibited!$
+
