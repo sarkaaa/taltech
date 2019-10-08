@@ -1,0 +1,22 @@
+!## PART 1 ##
+
+enable
+config t
+hostname R2
+no ip domain-lookup
+
+interface S0/0/0
+ip address 10.1.1.2 255.255.255.252
+no shutdown
+exit
+
+interface S0/0/1
+ip address 10.2.2.2 255.255.255.252
+no shutdown
+clock rate 64000
+exit
+
+ip route 192.168.3.0 255.255.255.0 10.2.2.1
+ip route 192.168.1.0 255.255.255.0 10.1.1.1
+
+

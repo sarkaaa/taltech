@@ -1,0 +1,81 @@
+enable
+conf t
+hostname R3
+int g0/1
+ip address 192.168.3.1 255.255.255.0
+no shutdown
+exit
+int s0/0/1
+ip address 10.2.2.1 255.255.255.252
+no shutdown
+exit
+no ip domain-lookup
+ip route 0.0.0.0 0.0.0.0 10.2.2.2
+copy running-config startup-config
+
+
+!Router 1 (?)
+security passwords min-length 10
+enable algorithm-type scrypt secret cisco12345
+line con 0
+password ciscoconpass
+exec-timeout 5 0
+login
+logging synchronous
+
+line aux 0
+password ciscoauxpass
+exec-timeout 5 0
+login
+
+line vty 0 4
+password ciscovtypass
+exec-timeout 5 0
+login
+
+exit
+service password-encryption
+
+!Router 3
+banner motd $Unauthorized access strictly prohibited!$
+exit
+
+! PART TWO
+conf t
+username user01 algorithm-type scrypt secret user01pass
+line con 0
+login local
+
+exit
+line vty 0 4
+login local
+transport input telnet
+exit
+
+line aux 0
+login local
+
+exit
+exit
+copy runnning-config startup-config
+
+conf t
+username Admin01 privilege 15 algorithm-type scrypt secret Admin01pass
+
+aaa new-model
+aaa authentication login default local-case none
+aaa authentication login TELNET_LINES local
+line vty 0 4
+login authentication TELNET_LINES
+exit
+exit
+
+
+! Task 3
+clock set 14:15:00 26 December 2016
+
+show run | include timestamps
+conf t
+service timestamps debug datetime msec
+exit
+copy running-config startup-config
