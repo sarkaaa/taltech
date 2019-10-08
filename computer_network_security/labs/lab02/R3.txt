@@ -79,3 +79,4 @@ conf t
 service timestamps debug datetime msec
 exit
 copy running-config startup-config
+debug aaa authentication
