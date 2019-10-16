@@ -1,0 +1,120 @@
+! PART 1
+! Basic settings
+enable
+conf t
+hostname R3
+int g0/0
+ip address 192.168.33.1 255.255.255.0
+no shutdown
+exit
+int g0/1
+ip address 192.168.3.1 255.255.255.0
+no shutdown
+exit
+int s0/0/1
+ip address 10.2.2.1 255.255.255.252
+no shutdown
+exit
+no ip domain-lookup
+
+! Configuring static route
+ip route 0.0.0.0 0.0.0.0 10.2.2.2
+copy running-config startup-config
+
+! User account, encrypted password, crypto keys for SSH
+security passwords min-length 10
+ip domain-name ccnasecurity.com
+crypto key generate rsa general-keys modulus 1024
+username admin01 algorithm-type scrypt secret cisco12345
+
+line console 0
+login local
+exec-timeout 5 0
+logging synchronous
+exit
+
+line aux 0
+login local
+exec-timeout 5 0
+exit
+
+line vty 0 4
+login local
+transport input ssh
+exec-timeout 5 0
+exit
+
+enable algorithm-type scrypt secret class12345
+copy running-config startup-config
+
+! PART 2
+! Creating security zones
+zone security INSIDE
+zone security CONFROOM
+zone security INTERNET
+
+! Creating security policies
+class-map type inspect match-any INSIDE_PROTOCOLS
+match protocol tcp
+match protocol udp
+match protocol icmp
+exit
+
+class-map type inspect match-any CONFROOM_PROTOCOLS
+match protocol http
+match protocol https
+match protocol dns
+exit
+
+policy-map type inspect INSIDE_TO_INTERNET
+class type inspect INSIDE_PROTOCOLS
+inspect
+exit
+exit
+
+policy-map type inspect CONFROOM_TO_INTERNET
+class type inspect CONFROOM_PROTOCOLS
+inspect
+exit
+exit
+
+! Creating zone pairs
+zone-pair security INSIDE_TO_INTERNET source INSIDE destination INTERNET
+zone-pair security CONFROOM_TO_INTERNET source CONFROOM destination INTERNET
+
+do show zone-pair security
+
+! Applying security policies
+zone-pair security INSIDE_TO_INTERNET
+service-policy type inspect INSIDE_TO_INTERNET
+zone-pair security CONFROOM_TO_INTERNET
+service-policy type inspect CONFROOM_TO_INTERNET
+
+do show zone-pair security
+do show policy-map type inspect zone-pair
+
+! Assign Interfaces to the Proper Security Zones
+interface g0/0
+zone-member security CONFROOM
+exit
+
+interface g0/1
+zone-member security INSIDE
+exit
+
+interface s0/0/1
+zone-member security INTERNET
+exit
+
+! Verify Zone Assignment
+do show zone security
+
+! PART 3
+! Multiple Interfaces under the Same Zone
+policy-map type inspect inside
+class class-default
+pass
+exit
+exit
+
+do show zone-pair security
