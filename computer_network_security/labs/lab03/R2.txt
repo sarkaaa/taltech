@@ -1,0 +1,50 @@
+!## PART 1 ##
+
+enable
+config t
+hostname R2
+no ip domain-lookup
+
+interface S0/0/0
+ip address 10.1.1.2 255.255.255.252
+no shutdown
+exit
+
+
+interface S0/0/1
+ip address 10.2.2.2 255.255.255.252
+no shutdown
+clock rate 64000
+exit
+
+ip route 192.168.3.0 255.255.255.0 10.2.2.1
+ip route 192.168.1.0 255.255.255.0 10.1.1.1
+ip route 192.168.33.0 255.255.255.0 10.2.2.1
+
+
+security passwords min-length 10
+ip domain-name ccnasecurity.com
+crypto key generate rsa general-keys modulus 1024
+username admin01 algorithm-type scrypt secret cisco12345
+
+
+line console 0
+login local
+exec-timeout 5 0
+logging synchronous
+exit
+
+line aux 0
+login local
+exec-timeout 5 0
+exit
+
+line vty 0 4
+login local
+transport input ssh
+exec-timeout 5 0
+exit
+
+
+enable algorithm-type scrypt secret class12345
+end
