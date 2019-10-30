@@ -1,0 +1,40 @@
+! R1
+! Basic settings
+enable
+conf t
+hostname R1
+int g0/1
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+exit
+no ip domain-lookup
+
+! User account, encrypted password, crypto keys for SSH
+security passwords min-length 10
+ip domain-name ccnasecurity.com
+crypto key generate rsa general-keys modulus 1024
+username admin01 algorithm-type scrypt secret cisco12345
+
+line console 0
+login local
+exec-timeout 5 0
+logging synchronous
+exit
+
+line aux 0
+login local
+exec-timeout 5 0
+exit
+
+line vty 0 4
+login local
+transport input ssh
+exec-timeout 5 0
+exit
+
+enable algorithm-type scrypt secret class12345
+
+no ip http server
+no ip http secure-server
+
+do copy running-config startup-config

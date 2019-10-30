@@ -1,0 +1,91 @@
+! S1
+! Basic settings
+enable
+conf t
+hostname S1
+int vlan 1
+ip address 192.168.1.2 255.255.255.0
+no shutdown
+exit
+no ip domain-lookup
+
+! User account, encrypted password, crypto keys for SSH
+security passwords min-length 10
+ip domain-name ccnasecurity.com
+crypto key generate rsa general-keys modulus 1024
+username admin01 algorithm-type scrypt secret cisco12345
+
+line console 0
+password ciscoconpass
+exec-timeout 5 0
+login
+logging synchronous
+exit
+
+enable algorithm-type scrypt secret class12345
+
+no ip http server
+no ip http secure-server
+
+do copy running-config startup-config
+
+
+! task 1
+ip domain-name ccnasecurity.com
+username admin privilege 15 algorithm-type scrypt secret
+cisco12345
+crypto key generate rsa general-keys modulus 1024
+
+ip ssh version 2
+do show ip ssh
+ip ssh time-out 90
+ip ssh authentication-retries 2
+
+line vty 0 4
+privilege level 15
+exec-timeout 5 0
+login local
+transport input ssh
+exit
+
+line vty 5 15
+transport input none
+exit
+do  copy running-config startup-config
+
+! task 2
+do show users
+
+spanning-tree vlan 1 priority 0
+exit
+
+do show spanning-tree
+
+interface f0/1
+switchport mode trunk
+exit
+
+do show interfaces trunk
+
+interface f0/1
+switchport trunk native vlan 99
+end
+
+interface f0/1
+switchport nonegotiate
+exit
+
+do show interfaces f0/1 trunk
+do show interfaces f0/1 switchport
+
+show run | begin 0/1
+
+interface f0/5
+switchport mode access
+exit
+
+interface f0/6
+switchport mode access
+exit
+
+! Task 3
