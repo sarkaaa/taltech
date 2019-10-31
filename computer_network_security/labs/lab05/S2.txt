@@ -10,10 +10,10 @@ exit
 no ip domain-lookup
 
 ! User account, encrypted password, crypto keys for SSH
-security passwords min-length 10
+
 ip domain-name ccnasecurity.com
+username admin privilege 15 algorithm-type scrypt secret cisco12345
 crypto key generate rsa general-keys modulus 1024
-username admin01 algorithm-type scrypt secret cisco12345
 
 line console 0
 password ciscoconpass
@@ -23,7 +23,6 @@ logging synchronous
 exit
 
 
-
 enable algorithm-type scrypt secret class12345
 
 no ip http server
@@ -31,16 +30,8 @@ no ip http secure-server
 
 do copy running-config startup-config
 
-ip domain-name ccnasecurity.com
-username admin privilege 15 algorithm-type scrypt secret
-cisco12345
-crypto key generate rsa general-keys modulus 1024
 
 ! task 1
-ip domain-name ccnasecurity.com
-username admin privilege 15 algorithm-type scrypt secret
-cisco12345
-crypto key generate rsa general-keys modulus 1024
 
 ip ssh version 2
 do show ip ssh
@@ -60,12 +51,6 @@ exit
 do  copy running-config startup-config
 
 ! task 2
-do show users
-
-spanning-tree vlan 1 priority 0
-exit
-
-do show spanning-tree
 
 interface f0/1
 switchport mode trunk
@@ -77,6 +62,7 @@ interface f0/1
 switchport trunk native vlan 99
 end
 
+conf t
 interface f0/1
 switchport nonegotiate
 exit
@@ -84,10 +70,34 @@ exit
 do show interfaces f0/1 trunk
 do show interfaces f0/1 switchport
 
-show run | begin 0/1
-
 interface f0/18
 switchport mode access
 exit
 
 ! Task 3
+
+interface f0/18
+spanning-tree portfast
+spanning-tree bpduguard enable
+exit
+
+interface g0/1
+spanning-tree guard root
+exit
+
+do show run | begin Gig
+do show spanning-tree inconsistentports
+
+spanning-tree loopguard default
+do show spanning-tree summary
+
+
+interface range f0/2 - 17, f0/19 - 24 , g0/1 - 2
+shutdown
+exit
+
+vlan 20
+name Users
+
+interface f0/18
+switchport access vlan 20

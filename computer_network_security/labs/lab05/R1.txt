@@ -37,4 +37,51 @@ enable algorithm-type scrypt secret class12345
 no ip http server
 no ip http secure-server
 
-do copy running-config startup-config
+interface g0/1
+mac-address aaaa.bbbb.cccc
+! look at the docs
+no mac-address aaaa.bbbb.cccc
+
+! do copy running-config startup-config
+
+! Part 4 Configure DHCP Snooping
+ip dhcp pool CCNAS
+network 192.168.1.0 255.255.255.0
+default-router 192.168.1.1
+exit
+
+ip dhcp excluded-address 192.168.1.1 192.168.1.4
+
+ip dhcp pool 20Users
+network 192.168.20.0 255.255.255.0
+default-router 192.168.20.1
+exit
+
+ip dhcp excluded-address 192.168.20.1
+
+interface g0/1
+shutdown
+no ip address 192.168.1.1 255.255.255.0
+no shutdown
+
+interface g0/1.1
+encapsulation dot1q 1
+ip address 192.168.1.1 255.255.255.0
+
+interface g0/1.20
+encapsulation dot1q 20
+ip address 192.168.20.1 255.255.255.0
+
+interface g0/1.99
+encapsulation dot1q 99
+ip address 192.168.99.1 255.255.255.0
+ip dhcp relay information trusted
+exit
+
+
+
+
+
+
+
+
