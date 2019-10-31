@@ -1,0 +1,20 @@
+! Basic config
+enable
+config t
+hostname R2
+no ip domain-lookup
+
+interface serial 0/0/0
+ip address 10.1.1.2 255.255.255.252
+no shutdown
+exit
+
+interface serial 0/0/1
+ip address 10.2.2.2 255.255.255.252
+clock rate 64000
+no shutdown
+exit
+
+router ospf 101
+network 10.1.1.0 0.0.0.3 area 0
+network 10.2.2.0 0.0.0.3 area 0
