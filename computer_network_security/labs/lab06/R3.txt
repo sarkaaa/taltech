@@ -1,0 +1,75 @@
+! R1
+! Basic settings
+enable
+configure terminal
+
+hostname R1
+no ip domain-lookup
+
+interface GigabitEthernet 0/1
+ip address 192.168.3.1 255.255.255.0
+no shutdown
+exit
+
+interface Serial 0/0/1
+ip address 10.2.2.1 255.255.255.252
+no shutdown
+exit
+
+! routing
+router ospf 101
+network 192.168.3.0 0.0.0.255 area 0
+network 10.2.2.0 0.0.0.3 area 0
+exit
+
+! perform pings according to docs
+
+!
+security passwords min-length 10
+username admin01 algorithm-type scrypt secret admin01pass
+ip domain-name ccnasecurity.com
+crypto key generate rsa general-keys modulus 1024
+
+
+! Part 2
+crypto isakmp enable
+
+crypto isakmp policy 10
+hash sha
+authentication pre-share
+group 14
+lifetime 3600
+encryption aes 256
+exit
+
+do show crypto isakmp policy
+
+crypto isakmp key cisco123 address 10.1.1.1
+
+crypto ipsec transform-set 50 esp-aes 256 esp-sha-hmac
+exit
+
+crypto ipsec security-association lifetime seconds 1800
+
+! Step 6: Define interesting traffic
+access-list 101 permit ip 192.168.3.0 0.0.0.255 192.168.1.0 0.0.0.255
+
+! Step 7: Create and apply a crypto map.
+crypto map CMAP 10 ipsec-isakmp
+match address 101
+set peer 10.1.1.1
+set pfs group14
+set transform-set 50
+set security-association lifetime seconds 900
+exit
+
+interface Serial 0/0/1
+crypto map CMAP
+exit
+
+do show crypto ipsec transform-set
+do show crypto map
+do show crypto isakmp sa
+
+
+
