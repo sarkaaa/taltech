@@ -1,91 +1,91 @@
-! Router R2
+! Router R1
 en
 conf t
-hostname R2
-ip domain-name ccnasecurity.com
+hostname R1
 no ip domain-lookup
 
 int g0/0
-ip address 192.168.12.1 255.255.255.0
+ip address 192.168.11.1 255.255.255.0
 no shutdown
+exit
 
 int g0/1
-ip address 192.168.2.1 255.255.255.0
-no shut
-
-
-int s0/0/0
-ip address 10.1.1.2 255.255.255.0
+ip address 192.168.1.1 255.255.255.0
 no shut
 exit
 
-
 int s0/0/1
-ip address 10.2.2.2 255.255.255.0
+ip address 10.3.3.1 255.255.255.0
+clock rate 64000
+no shut
+exit
+
+int s0/0/0
+ip address 10.1.1.1 255.255.255.0
 clock rate 64000
 no shut
 exit
 
 router ospf 1
 network 10.1.1.0 0.0.0.255 area 0
-network 10.2.2.0 0.0.0.255 area 0
-network 192.168.12.0 0.0.0.255 area 0
-network 192.168.2.0 0.0.0.255 area 0
+network 10.3.3.0 0.0.0.255 area 0
+network 192.168.11.0 0.0.0.255 area 0
+network 192.168.1.0 0.0.0.255 area 0
 exit
+
+security passwords min-length 10
+ip domain-name ccnasecurity.com
+
+crypto key generate rsa general-keys modulus 1024
+
+username cisco algorithm-type scrypt secret cisco12345
 
 line vty 0 4
 login local
 transport input ssh
-exit
-
-crypto key generate rsa general-keys modulus 1024
-username cisco algorithm-type scrypt secret cisco12345
-
-int g0/1
-ip access-group 102 in
+exec-timeout 5 0
 exit
 
 !!! network object groups !!!
 
 ! object group matching all hosts connected to LAN
 object-group network LAN
-192.168.2.0 255.255.255.0
+192.168.1.0 255.255.255.0
 description hosts connected to LAN
 exit
 
 ! object group matching all hosts connected to DMZ
 object-group network DMZ
-192.168.12.0 255.255.255.0
-exit
-
-! object group matching network on which is R1 connected to
-object-group network TO-R1
-10.1.1.0 255.255.255.0
+192.168.11.0 255.255.255.0
 exit
 
 ! object group matching network on which is R3 connected to
 object-group network TO-R3
-10.2.2.0 255.255.255.0
+10.3.3.0 255.255.255.0
+exit
+
+! object group matching network on which is R2 connected to
+object-group network TO-R2
+10.1.1.0 255.255.255.0
 exit
 
 object-group network INTERNET
-group-object TO-R1
+group-object TO-R2
 group-object TO-R3
 exit
 
 object-group network INTERNAL_NETWORK
-group-object LAN
 group-object DMZ
+group-object LAN
 exit
 
-object-group network ALL-R2-INT
+object-group network ALL_R1_INT
 group-object INTERNET
 group-object INTERNAL_NETWORK
 exit
 
-! object group matching twitter.com
-object-group service TWITTER
-104.244.42.193
+!object group matching twitter.com
+object-group network TWITTER
 exit
 
 !!! service object groups !!!
@@ -132,29 +132,29 @@ no ip access-list extended ACL_DMZ
 no ip access-list extended ACL_TO_INTERNET_IN
 no ip access-list extended ACL_TO_INTERNET_OUT
 
-
 ip access-list extended ACL_DMZ
-deny object-group SSH object-group ALL-R2-INT object-group ALL-R2-INT log
+deny object-group  SSH object-group ALL_R1_INT object-group ALL_R1_INT log
 permit object-group SSH object-group LAN object-group LAN log
 permit icmp object-group DMZ object-group LAN echo-reply log
 exit
 
 ip access-list extended ACL_LAN
+deny object-group SSH object-group ALL_R1_INT object-group ALL_R1_INT log
 permit object-group SSH object-group LAN object-group LAN log
 permit object-group TCP-AND-UDP object-group LAN object-group DMZ log
-permit object-group TCP-AND-UDP object-group DMZ object-group LAN log
 permit icmp object-group LAN object-group DMZ log
+permit icmp object-group LAN object-group LAN log
+permit icmp object-group LAN object-group INTERNET log
 exit
 
 ip access-list extended ACL_TO_INTERNET_IN
-deny object-group SSH object-group INTERNET object-group ALL-R2-INT log
+deny object-group SSH object-group INTERNET object-group ALL_R1_INT log
 permit object-group SSH object-group LAN object-group LAN log
-permit object-group OSPF object-group INTERNET any log
+permit object-group OSPF object-group TO-R2 any log
 exit
 
 ip access-list extended ACL_TO_INTERNET_OUT
-deny tcp any host 104.244.42.193 eq www log
-deny tcp any host 104.244.42.193 eq 443 log
+
 exit
 
 
@@ -162,21 +162,19 @@ exit
 ! apply ACLs to interfaces
 
 int g0/0
-no ip access-group ACL_DMZ in
+ip access-group ACL_DMZ in
 exit
 
 int g0/1
-no ip access-group ACL_LAN in
+ip access-group ACL_LAN in
 exit
 
 int Serial0/0/1
-no ip access-group ACL_TO_INTERNET_IN in
-no ip access-group ACL_TO_INTERNET_OUT out
+ip access-group ACL_TO_INTERNET_IN in
+ip access-group ACL_TO_INTERNET_OUT out
 exit
 
 int Serial0/0/0
-no ip access-group ACL_TO_INTERNET_IN in
-no ip access-group ACL_TO_INTERNET_OUT out
+ip access-group ACL_TO_INTERNET_IN in
+ip access-group ACL_TO_INTERNET_OUT out
 exit
-
-no debug ip packet detail
