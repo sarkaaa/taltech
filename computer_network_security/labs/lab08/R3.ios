@@ -1,0 +1,209 @@
+! Router R3
+enable
+configure terminal
+hostname R3
+no ip domain-lookup
+security passwords min-length 10
+ip domain-name ccnasecurity.com
+
+int g0/0
+ip address 192.168.13.1 255.255.255.0
+no shutdown
+exit
+
+int g0/1
+ip address 192.168.3.1 255.255.255.0
+no shutdown
+exit
+
+int s0/0/0
+ip address 10.3.3.2 255.255.255.0
+no shutdown
+exit
+
+int s0/0/1
+ip address 10.2.2.1 255.255.255.0
+no shutdown
+exit
+
+router ospf 1
+network 10.2.2.0 0.0.0.255 area 0
+network 10.3.3.0 0.0.0.255 area 0
+network 192.168.13.0 0.0.0.255 area 0
+network 192.168.3.0 0.0.0.255 area 0
+exit
+
+line vty 0 4
+login local
+transport input ssh
+exit
+
+crypto key generate rsa general-keys modulus 1024
+username cisco algorithm-type scrypt secret cisco12345
+
+!!! network object groups !!!
+
+! object group matching all hosts connected to LAN
+object-group network LAN
+192.168.3.0 255.255.255.0
+description hosts connected to LAN
+exit
+
+! object group matching all hosts connected to DMZ
+object-group network DMZ
+192.168.13.0 255.255.255.0
+exit
+
+! object group matching network on which is R1 connected to
+object-group network TO-R1
+10.3.3.0 255.255.255.0
+exit
+
+! object group matching network on which is R3 connected to
+object-group network TO-R2
+10.2.2.0 255.255.255.0
+exit
+
+object-group network INTERNET
+group-object TO-R1
+group-object TO-R2
+exit
+
+object-group network INTERNAL_NETWORK
+group-object LAN
+group-object DMZ
+exit
+
+object-group network ALL_R3_INT
+group-object INTERNET
+group-object INTERNAL_NETWORK
+exit
+
+! object group matching twitter.com
+object-group network TWITTER
+host 104.244.42.193
+! following line just for lab purposes, considering host 11.10 being twitter.com
+!host 192.168.11.10
+exit
+
+!!! service object groups !!!
+
+! object group matching all SSH traffic (port 22)
+object-group service SSH
+tcp eq 22
+exit
+
+! object group matching all tcp and udp traffic
+object-group service TCP-AND-UDP
+tcp-udp gt 0
+exit
+
+object-group service SMTP
+tcp eq smtp
+exit
+
+object-group service HTTP
+tcp www
+exit
+
+object-group service HTTPS
+tcp eq 443
+exit
+
+object-group service DNS
+udp eq domain
+tcp eq domain
+exit
+
+object-group service FTP
+tcp eq ftp
+tcp eq ftp-data
+exit
+
+object-group service OSPF
+ospf
+exit
+
+! lab assignment task no.3
+! allowed services that users in LAN can access
+object-group service ALLOWED_PROTO_LAN_IN
+group-object HTTP
+group-object HTTPS
+group-object FTP
+exit
+
+! lab assignment task no.5
+! allowed protocols from DMZ
+object-group service ALLOWED_PROTO_DMZ_IN
+group-object DNS
+group-object SMTP
+exit
+
+! lab assignment task no.7
+! allowed protocols to DMZ
+object-group service ALLOWED_PROTO_DMZ_OUT
+group-object HTTP
+group-object HTTPS
+group-object DNS
+group-object SMTP
+exit
+
+!!! access lists !!!
+! ACL syntax: what, from, to (where)
+
+no ip access-list extended ACL_DMZ
+ip access-list extended ACL_DMZ
+deny object-group SSH object-group ALL_R3_INT object-group ALL_R3_INT log
+permit icmp object-group DMZ any echo-reply log
+permit tcp object-group DMZ any gt 1023 established
+permit object-group ALLOWED_PROTO_DMZ_IN object-group DMZ any
+deny tcp object-group DMZ object-group LAN syn log
+exit
+
+no ip access-list extended ACL_LAN
+ip access-list extended ACL_LAN
+permit object-group SSH object-group LAN object-group LAN log
+permit object-group TCP-AND-UDP object-group LAN object-group DMZ log
+permit icmp object-group LAN any log
+permit icmp any object-group LAN echo-reply log
+permit object-group ALLOWED_PROTO_LAN_IN object-group LAN any
+exit
+
+no ip access-list extended ACL_TO_INTERNET_IN
+ip access-list extended ACL_TO_INTERNET_IN
+deny object-group SSH object-group INTERNET object-group ALL_R3_INT log
+permit object-group SSH object-group LAN object-group LAN log
+permit object-group OSPF object-group INTERNET any
+permit icmp any any log
+! uncomment following if passing all ip traffic to DMZ is desired
+!permit ip any object-group DMZ log
+permit tcp any object-group LAN gt 1023 established log
+permit object-group ALLOWED_PROTO_DMZ_OUT any object-group DMZ log
+exit
+
+no ip access-list extended ACL_TO_INTERNET_OUT
+ip access-list extended ACL_TO_INTERNET_OUT
+deny ip object-group ALL_R3_INT object-group TWITTER log
+permit icmp any any
+permit ip any any
+exit
+
+! apply ACLs to interfaces
+
+int g0/0
+ip access-group ACL_DMZ in
+exit
+
+int g0/1
+ip access-group ACL_LAN in
+exit
+
+int Serial0/0/1
+ip access-group ACL_TO_INTERNET_IN in
+ip access-group ACL_TO_INTERNET_OUT out
+exit
+
+int Serial0/0/0
+ip access-group ACL_TO_INTERNET_IN in
+ip access-group ACL_TO_INTERNET_OUT out
+exit
