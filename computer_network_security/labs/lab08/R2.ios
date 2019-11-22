@@ -1,29 +1,30 @@
 ! Router R2
-en
-conf t
+enable
+configure terminal
 hostname R2
-ip domain-name ccnasecurity.com
 no ip domain-lookup
+security passwords min-length 10
+ip domain-name ccnasecurity.com
 
 int g0/0
 ip address 192.168.12.1 255.255.255.0
 no shutdown
+exit
 
 int g0/1
 ip address 192.168.2.1 255.255.255.0
-no shut
-
+no shutdown
+exit
 
 int s0/0/0
 ip address 10.1.1.2 255.255.255.0
-no shut
+no shutdown
 exit
-
 
 int s0/0/1
 ip address 10.2.2.2 255.255.255.0
 clock rate 64000
-no shut
+no shutdown
 exit
 
 router ospf 1
@@ -40,10 +41,6 @@ exit
 
 crypto key generate rsa general-keys modulus 1024
 username cisco algorithm-type scrypt secret cisco12345
-
-int g0/1
-ip access-group 102 in
-exit
 
 !!! network object groups !!!
 
@@ -78,7 +75,7 @@ group-object LAN
 group-object DMZ
 exit
 
-object-group network ALL-R2-INT
+object-group network ALL_R2_INT
 group-object INTERNET
 group-object INTERNAL_NETWORK
 exit
@@ -97,7 +94,7 @@ object-group service SSH
 tcp eq 22
 exit
 
-! object group matching all tcp and udp traffic, 
+! object group matching all tcp and udp traffic
 object-group service TCP-AND-UDP
 tcp-udp gt 0
 exit
@@ -129,6 +126,7 @@ ospf
 exit
 
 ! lab assignment task no.3
+! allowed services that users in LAN can access
 object-group service ALLOWED_PROTO_LAN_IN
 group-object HTTP
 group-object HTTPS
@@ -136,13 +134,14 @@ group-object FTP
 exit
 
 ! lab assignment task no.5
+! allowed protocols from DMZ
 object-group service ALLOWED_PROTO_DMZ_IN
 group-object DNS
 group-object SMTP
 exit
 
-
 ! lab assignment task no.7
+! allowed protocols to DMZ
 object-group service ALLOWED_PROTO_DMZ_OUT
 group-object HTTP
 group-object HTTPS
@@ -150,13 +149,12 @@ group-object DNS
 group-object SMTP
 exit
 
-
 !!! access lists !!!
 ! ACL syntax: what, from, to (where)
 
 no ip access-list extended ACL_DMZ
 ip access-list extended ACL_DMZ
-deny object-group SSH object-group ALL-R2-INT object-group ALL-R2-INT log
+deny object-group SSH object-group ALL_R2_INT object-group ALL_R2_INT log
 permit icmp object-group DMZ any echo-reply log
 permit tcp object-group DMZ any gt 1023 established
 permit object-group ALLOWED_PROTO_DMZ_IN object-group DMZ any
@@ -167,7 +165,6 @@ no ip access-list extended ACL_LAN
 ip access-list extended ACL_LAN
 permit object-group SSH object-group LAN object-group LAN log
 permit object-group TCP-AND-UDP object-group LAN object-group DMZ log
-permit object-group TCP-AND-UDP object-group DMZ object-group LAN log
 permit icmp object-group LAN any log
 permit icmp any object-group LAN echo-reply log
 permit object-group ALLOWED_PROTO_LAN_IN object-group LAN any
@@ -175,10 +172,11 @@ exit
 
 no ip access-list extended ACL_TO_INTERNET_IN
 ip access-list extended ACL_TO_INTERNET_IN
-deny object-group SSH object-group INTERNET object-group ALL-R2-INT log
+deny object-group SSH object-group INTERNET object-group ALL_R2_INT log
 permit object-group SSH object-group LAN object-group LAN log
 permit object-group OSPF object-group INTERNET any
 permit icmp any any log
+! uncomment following if passing all ip traffic to DMZ is desired
 !permit ip any object-group DMZ log
 permit tcp any object-group LAN gt 1023 established log
 permit object-group ALLOWED_PROTO_DMZ_OUT any object-group DMZ log
@@ -186,13 +184,10 @@ exit
 
 no ip access-list extended ACL_TO_INTERNET_OUT
 ip access-list extended ACL_TO_INTERNET_OUT
-deny ip object-group ALL-R2-INT object-group TWITTER log
+deny ip object-group ALL_R2_INT object-group TWITTER log
 permit icmp any any
 permit ip any any
-
 exit
-
-
 
 ! apply ACLs to interfaces
 
@@ -213,5 +208,3 @@ int Serial0/0/0
 ip access-group ACL_TO_INTERNET_IN in
 ip access-group ACL_TO_INTERNET_OUT out
 exit
-
-no debug ip packet detail
