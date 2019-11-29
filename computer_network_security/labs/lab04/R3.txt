@@ -3,20 +3,22 @@
 enable
 conf t
 hostname R3
+no ip domain-lookup
+
 int g0/1
 ip address 192.168.3.1 255.255.255.0
 no shutdown
 exit
+
 int s0/0/1
 ip address 10.2.2.1 255.255.255.252
 no shutdown
 exit
-no ip domain-lookup
-
 
 ! Configuring static routing
-ip route 0.0.0.0 0.0.0.0 10.2.2.2
-copy running-config startup-config
+ip route 0.0.0.0 0.0.0.0 10.1.1.2
+
+!copy running-config startup-config
 
 ! User account, encrypted password, crypto keys for SSH
 security passwords min-length 10

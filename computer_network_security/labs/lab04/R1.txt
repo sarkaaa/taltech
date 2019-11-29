@@ -1,0 +1,162 @@
+! R1
+! Basic settings
+enable
+conf t
+hostname R1
+no ip domain-lookup
+
+int g0/1
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+exit
+
+int s0/0/0
+ip address 10.1.1.1 255.255.255.252
+clock rate 64000
+no shutdown
+exit
+
+! Configuring static routing
+ip route 0.0.0.0 0.0.0.0 10.1.1.2
+
+!copy running-config startup-config
+
+! User account, encrypted password, crypto keys for SSH
+security passwords min-length 10
+ip domain-name ccnasecurity.com
+crypto key generate rsa general-keys modulus 1024
+username admin01 algorithm-type scrypt secret cisco12345
+
+line console 0
+!login local
+exec-timeout 5 0
+logging synchronous
+exit
+
+
+line vty 0 4
+!login local
+transport input ssh
+exec-timeout 5 0
+exit
+
+enable algorithm-type scrypt secret class12345
+
+!!!! lab itself !!!!
+end
+
+! Part 2, Task 2
+show flash:
+mkdir ipsdir
+delete flash:ipsdir/*
+dir flash:
+dir flash:ipsdir
+
+! Part 2, Task 3
+! configure crypto key
+conf t
+crypto key pubkey-chain rsa
+ named-key realm-cisco.pub signature
+  key-string
+   30820122 300D0609 2A864886 F70D0101 01050003 82010F00 3082010A 02820101
+   00C19E93 A8AF124A D6CC7A24 5097A975 206BE3A2 06FBA13F 6F12CB5B 4E441F16
+   17E630D5 C02AC252 912BE27F 37FDD9C8 11FC7AF7 DCDD81D9 43CDABC3 6007D128
+   B199ABCB D34ED0F9 085FADC1 359C189E F30AF10A C0EFB624 7E0764BF 3E53053E
+   5B2146A9 D7A5EDE3 0298AF03 DED7A5B8 9479039D 20F30663 9AC64B93 C0112A35
+   FE3F0C87 89BCB7BB 994AE74C FA9E481D F65875D6 85EAF974 6D9CC8E3 F0B08B85
+   50437722 FFBE85B9 5E4189FF CC189CB9 69C46F9C A84DFBA5 7A0AF99E AD768C36
+   006CF498 079F88F8 A3B3FB1F 9FB7B3CB 5539E1D1 9693CCBB 551F78D2 892356AE
+   2F56D826 8918EF3C 80CA4F4D 87BFCA3B BFF668E9 689782A5 CF31CB6E B4B094D3
+   F3020301 0001
+ quit
+ exit
+ exit
+
+! check whether crypto key is configured
+show run | section crypto
+
+! Part 2, Task 4
+ip ips name iosips
+! ip ips name ips list ?
+
+ip ips config location flash:ipsdir
+ip http server
+ip ips notify sdee
+ip ips notify log
+! set different time if needed
+do clock set 17:14:00 29 nov 2019
+service timestamps log datetime msec
+logging 192.168.1.3
+do show logging
+
+! Part 2, Task 4, Step 6
+ip ips signature-category
+category all
+retired true
+exit
+category ios_ips basic
+retired false
+exit
+exit
+! confirm applying changes
+
+interface serial0/0/0
+ip ips iosips in
+exit
+
+interface g0/1
+ip ips iosips in
+exit
+
+end
+!copy running-config startup-config
+
+! Part 2, Task 5, Step 3
+copy tftp://192.168.1.3/IOS-S855-CLI.pkg idconf
+! verify files in the directory
+dir flash:ipsdir
+show ip ips signature count
+show ip ips all
+
+! Part 2, Task 6, Step 3
+conf t
+ip ips signature-definition
+signature 2004 0
+status
+retired false
+enabled true
+engine
+event-action produce-alert
+event-action deny-packet-inline
+event-action reset-tcp-connection
+exit
+exit
+exit
+! confirm by pressing Enter
+
+! run zenmap on PC-A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
