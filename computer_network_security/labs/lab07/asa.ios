@@ -1,3 +1,7 @@
+! access
+enable
+class
+
 show version
 show file system
 show flash
@@ -21,7 +25,7 @@ domain-name ccnasecurity.com
 passwd cisco
 enable password class
 
-clock set 17:09:00 november 29 2019
+clock set 21:09:00 december 2 2019
 
 interface vlan 1
 nameif inside
@@ -35,6 +39,7 @@ no shutdown
 exit
 
 do show interface e0/0
+
 interface e0/1
 switchport access vlan 1
 no shutdown
@@ -57,6 +62,7 @@ http 192.168.1.0 255.255.255.0 inside
 ! SW part
 
 ! part 4
+route outside 0.0.0.0. 0.0.0.0 209.165.200.225
 do show route
 object network INSIDE-NET
 subnet 192.168.1.0 255.255.255.0
@@ -79,7 +85,7 @@ inspect icmp
 do show run policy-map
 
 ! part 5
-dhcp address 192.168.1.5-192.168.1.100 inside
+dhcpd address 192.168.1.5-192.168.1.100 inside
 dhcpd address 192.168.1.5-192.168.1.36 inside
 dhcpd dns 209.165.201.2
 dhcpd option 3 ip 192.168.1.1

@@ -32,8 +32,7 @@ do copy running-config startup-config
 
 ! task 1
 ip domain-name ccnasecurity.com
-username admin privilege 15 algorithm-type scrypt secret
-cisco12345
+username admin privilege 15 algorithm-type scrypt secret cisco12345
 crypto key generate rsa general-keys modulus 1024
 
 ip ssh version 2

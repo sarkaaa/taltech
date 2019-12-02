@@ -21,4 +21,4 @@ interface lo0
 ip address 172.30.1.1 255.255.255.0
 end
 
-ping 209.165.200.227
+ping 209.165.200.227 source lo0

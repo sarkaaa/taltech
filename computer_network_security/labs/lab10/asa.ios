@@ -1,0 +1,94 @@
+! erase startup-config
+! reload
+
+en
+show run
+conf t
+
+hostname CCNAS-ASA
+domain-name ccnasecurity.com
+enable password cisco12345
+
+!
+interface Ethernet0/0
+switchport access vlan 2
+no shut
+
+!
+interface Ethernet0/1
+switchport access vlan 1
+no shut
+
+!
+interface Ethernet0/2
+switchport access vlan 3
+no shut
+
+!
+interface Vlan1
+nameif inside
+security-level 100
+ip address 192.168.1.1 255.255.255.0
+
+!
+interface Vlan2
+nameif outside
+security-level 0
+ip address 209.165.200.226 255.255.255.248
+
+!
+interface Vlan3
+no forward interface Vlan1
+nameif dmz
+security-level 70
+ip address 192.168.2.1 255.255.255.0
+
+!
+object network inside-net
+subnet 192.168.1.0 255.255.255.0
+
+!
+object network dmz-server
+host 192.168.2.3
+
+!
+access-list OUTSIDE-DMZ extended permit ip any host 192.168.2.3
+
+!
+object network inside-net
+nat (inside,outside) dynamic interface
+
+!
+object network dmz-server
+nat (dmz,outside) static 209.165.200.227
+
+!
+access-group OUTSIDE-DMZ in interface outside
+
+!
+route outside 0.0.0.0 0.0.0.0 209.165.200.225 1
+
+!
+username admin01 password admin01pass
+
+!
+aaa authentication ssh console LOCAL
+aaa authentication http console LOCAL
+
+!
+http server enable
+http 192.168.1.0 255.255.255.0 inside
+ssh 192.168.1.0 255.255.255.0 inside
+ssh timeout 10
+
+!
+class-map inspection_default
+match default-inspection-traffic
+policy-map global_policy
+class inspection_default
+inspect icmp
+
+!
+crypto key generate rsa modulus 1024
+
+do write mem
