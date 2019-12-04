@@ -1,0 +1,49 @@
+! part 6, task 1, step 1
+write erase
+reload
+
+! part 6, task 1, step 2
+en
+conf t
+
+interface vlan 1
+nameif inside
+security-level 100
+ip address 192.168.1.1 255.255.255.0
+
+interface e0/1
+switchport access vlan 1
+no shutdown
+
+interface vlan 2
+nameif outside
+ip address 209.165.200.226 255.255.255.248
+no shutdown
+exit
+
+interface e0/0
+switchport access vlan 2
+no shutdown
+
+interface vlan 3
+ip address 192.168.2.1 255.255.255.0
+security-level 70
+nameif dmz
+no forward interface vlan 1
+no shutdown
+
+interface Ethernet0/2
+switchport access vlan 3
+no shut
+
+show interface ip brief
+show ip address
+show switch vlan
+
+! part 6, task 1, step 3
+http server enable
+http 192.168.1.0 255.255.255.0 inside
+
+! part 6, task 2, step 1
+!!! TO FINISH!
+

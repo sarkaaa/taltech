@@ -1,0 +1,82 @@
+! S1 configuration
+! Basic settings
+enable
+conf t
+hostname S1
+int vlan 1
+ip address 192.168.2.11 255.255.255.0
+no shutdown
+exit
+
+no ip domain-lookup
+
+! part 5, task 1, step 1
+! disabling http server
+no ip http server
+no ip http secure-server
+
+enable algorithm-type scrypt secret cisco12345
+
+! encrypt plaintext password
+service password-encryption
+
+
+banner motd %Unauthorized access strictly prohibited!%
+
+! Part 5, Task 1, Step 2
+! configure domain name
+ip domain-name ccnasecurity.com
+
+username Admin01 privilege 15 algorithm-type scrypt secret Admin01pa55
+
+crypto key generate rsa general-keys modulus 1024
+
+! enable sshv2
+ip ssh version 2
+
+! timeout and retries
+ip ssh time-out 90
+ip ssh authentication-retries 2
+
+! Part 5, Task 1, Step 3
+! configure VTY lines
+line vty 5 15
+transport input none
+exit
+
+line vty 0 4
+privilege level 15
+exec-timeout 5 0
+login local
+transport input ssh
+exit
+
+! Part 5, Task 1, Step 4
+int f0/6
+
+! disable trunking
+switchport mode access
+
+! enable portfast
+spanning-tree portfast
+
+! enable bpdu guard
+spanning-tree bpduguard enable
+
+!Apply basic default port security
+switchport port-security maximum 1
+switchport port-security violation shutdown
+switchport port-security mac-address sticky
+
+! disable unused ports
+interface range f0/1 - 5
+shutdown
+
+interface range f0/7 - 23
+shutdown
+
+! Part 5, Task 1, Step 5
+spanning-tree loopguard default
+
+! Part 5, Task 1, Step 6
+do copy running-config startup-config
