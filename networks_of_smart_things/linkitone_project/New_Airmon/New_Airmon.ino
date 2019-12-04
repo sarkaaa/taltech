@@ -14,9 +14,9 @@
 ///*
 //	Modify to your WIFI Access Credentials.
 //*/
-#define WIFI_AP "A pedali"
-#define WIFI_PASSWORD "AALO402AB"
-#define WIFI_AUTH LWIFI_WPA  // choose from LWIFI_OPEN, LWIFI_WPA, or LWIFI_WEP.
+#define WIFI_AP "TalTech"
+#define WIFI_PASSWORD "" //"AALO402AB"
+#define WIFI_AUTH LWIFI_OPEN  // choose from LWIFI_OPEN, LWIFI_WPA, or LWIFI_WEP.
 #define TOKEN "jHA7KcA99O4eAIdGHV2Z"
 
 
