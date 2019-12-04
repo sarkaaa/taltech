@@ -32,7 +32,7 @@ enable algorithm-type scrypt secret cisco12345
 
 ! part 3, task 1, step 5
 enable algorithm-type scrypt secret cisco12345
-username Admin01 privilege 15 algorithm-type scrypt secret Admin01pass55
+username Admin01 privilege 15 algorithm-type scrypt secret Admin01pa55
 
 ! part 3, task 1, step 6
 aaa new-model
@@ -55,8 +55,8 @@ privilege level 15
 exit
 
 ! part 3, task 1, step 10
-logging on-failure log every 2
-logging on-success log every 1
+login on-failure log every 2
+login on-success log every 1
 
 ! part 3, task 1, step 11
 ip http server
@@ -74,25 +74,10 @@ ip ssh version 2
 ! part 3, task 2, step 4
 ip ssh time-out 90
 ip ssh authentication-retries 2
+exit
 
 
-! part 3, task 3, step 1
-
-
-! missing from part 2:
-! step3b - simulated loopback
-
-
-
-! for R2
-! step 1
-clock set 19:30:30 Nov 29 2019
-ntp authentication-key 1 md5 NTPpassword
-ntp trusted-key 1
-ntp authenticate
-ntp master 3
-
-! step 2, for R3
+! part 3, task 4, step 2
 ntp authentication-key 1 md5 NTPpassword
 ntp trusted-key 1
 ntp authenticate
@@ -101,7 +86,48 @@ ntp update-calendar
 
 do show ntp status
 
-! task 5, step 2
+! part 3, task 5, step 2
 service timestamps log datetime msec
 logging 172.16.3.3
 logging trap warning
+
+! part 4, task 1, step 1
+! creating security zones
+zone security INSIDE
+zone security OUTSIDE
+
+! Creating class map
+class-map type inspect match-any INSIDE-PROTOCOLS
+match protocol tcp
+match protocol udp
+match protocol icmp
+exit
+
+! Creating policy map
+policy-map type inspect INSIDE-TO-OUTSIDE
+class type inspect INSIDE-PROTOCOLS
+inspect
+exit
+
+! Creating zone pairs
+zone-pair security INSIDE-TO-OUTSIDE source INSIDE destination OUTSIDE
+
+! Applying security policies
+zone-pair security INSIDE-TO-OUTSIDE
+service-policy type inspect INSIDE-TO-OUTSIDE
+
+! assign interfaces to the security zones
+interface g0/0
+zone-member security INSIDE
+exit
+
+interface s0/0/1
+zone-member security OUTSIDE
+exit
+
+do show zone-pair security
+do show policy-map type inspect zone-pair
+do show zone security
+
+! part 4, task 2, step 1
+
