@@ -1,0 +1,16 @@
+! R3
+! Basic settings
+enable
+conf t
+hostname R3
+int g0/1
+ip address 172.16.3.1 255.255.255.0
+no shutdown
+exit
+int s0/0/1
+ip address 10.2.2.1 255.255.255.252
+no shutdown
+exit
+no ip domain-lookup
+
+ip route 0.0.0.0 0.0.0.0 Serial0/0/1

@@ -1,0 +1,65 @@
+en
+conf t
+
+hostname R3
+security passwords min-length 10
+enable algorithm-type scrypt secret cisco12345
+username admin01 algorithm-type scrypt secret admin01pass
+ip domain name ccnasecurity.com
+
+line con 0
+login local
+exec-timeout 5 0
+logging synchronous
+exit
+
+line vty 0 4
+login local
+transport input ssh
+exec-timeout 5 0
+logging synchronous
+exit
+
+interface gigabitethernet 0/1
+ip address 172.16.3.1 255.255.255.0
+no shut exit
+
+int serial 0/0/1
+ip address 10.2.2.1 255.255.255.252
+no shut
+exit
+
+ip route 0.0.0.0 0.0.0.0 Serial0/0/1
+crypto key generate rsa general-keys modulus 1024
+
+crypto isakmp enable
+crypto isakmp policy 10
+
+crypto isakmp policy 10
+authentication pre-share
+encryption pre-share
+encryption 3des
+hash share
+group 2
+end
+
+show crypto isakmp policy
+crypto isakmp key SECRET-KEY address 209.165.200.226
+
+crypto ipsec transform-set ESP-TUNNEL ?
+crypto ipsec transform-set ESP-TUNNEL esp-3des esp-sha-hmac
+
+ip access-list extended VPN-ACL
+remark Link to the CCNAS-ASA
+permit ip 172.16.3.0 0.0.0.255 192.168.1.0 0.0.0.255
+exit
+
+crypto map S2S-MAP 10 ipsec-isakmp
+match address VPN-ACL
+set peer 209.165.200.226
+set transform-set ESP-TUNNEL
+exit
+
+int s0/0/1
+crypto map S2S-MAP
+end

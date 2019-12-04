@@ -1,0 +1,127 @@
+!## PART 1 ##
+
+enable
+config t
+
+! Part 2, Step 3
+hostname R1
+
+! connected to ASA E0/0
+interface g0/0
+ip address 209.165.200.225 255.255.255.248
+no shutdown
+exit
+
+! connected to R2
+interface S0/0/0
+ip address 10.1.1.1 255.255.255.252
+clock rate 128000
+no shutdown
+exit
+
+interface Loopback 1
+ip address 172.20.1.1 255.255.255.0
+exit
+
+no ip domain-lookup
+
+! Part 2, Step 3
+! default route to R2
+ip route 0.0.0.0 0.0.0.0 10.1.1.2
+
+
+! Part 3, Task 1, Step 1
+security passwords min-length 10
+
+! Part 3, Task 1, Step 2
+service password-encryption
+
+! Part 3, Task 1, Step 3
+banner motd %
+Unauthorized access strictly prohibited and prosecuted to the full extent of the law!
+%
+
+! Part 3, Task 1, Step 4
+enable algorithm-type scrypt secret cisco12345
+
+! Part 3, Task 1, Step 5
+username Admin01 privilege 15 algorithm-type scrypt secret Admin01pa55
+
+! Part 3, Task 1, Step 6
+aaa new-model
+
+! Part 3, Task 1, Step 7
+aaa authentication login default local
+aaa authorization exec default local
+
+! Part 3, Task 1, Step 8
+line console 0
+login local
+exec-timeout 15 0
+privilege level 15
+logging synchronous
+exit
+
+! Part 3, Task 1, Step 9
+line vty 0 4
+login local
+transport input ssh
+exec-timeout 15 0
+privilege level 15
+exit
+
+! Part 3, Task 1, Step 10
+login on-success log
+login on-failure log every 2
+
+! Part 3, Task 1, Step 11
+ip http server
+ip http authentication local
+
+! Part 3, Task 2, Step 1
+ip domain-name ccnasecurity.com
+
+! Part 3, Task 2, Step 2
+crypto key generate rsa general-keys modulus 1024
+
+! Part 3, Task 2, Step 3
+ip ssh version 2
+
+! Part 3, Task 2, Step 4
+ip ssh time-out 90
+ip ssh authentication-retries 2
+
+! Part 3, Task 3, Step 1
+login block-for 60 attempts 2 within 30
+login on-failure log
+
+
+! Part 3, Task 3, Step 2
+secure boot-image
+secure boot-config
+
+! Part 3, Task 3, Step 3
+show secure bootset
+!end
+!copy running-config startup-config
+!conf t
+
+! Part 3, Task 3, Step 4
+no secure boot-image
+no secure boot-config
+
+! Part 3, Task 4, Step 2
+ntp authentication-key 1 md5 NTPpassword
+ntp trusted-key 1
+ntp authenticate
+ntp server 10.1.1.2
+ntp update-calendar
+
+! verify
+do show ntp status
+
+
+
+
+
+

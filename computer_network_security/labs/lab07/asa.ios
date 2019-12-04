@@ -1,0 +1,141 @@
+! access
+enable
+class
+
+show version
+show file system
+show flash
+
+show running-config
+
+conf t
+configure factory-default
+
+write erase
+show start
+
+reload
+
+
+!!! ASA init
+config t
+hostname CCNAS-ASA
+
+domain-name ccnasecurity.com
+passwd cisco
+enable password class
+
+clock set 21:09:00 december 2 2019
+
+interface vlan 1
+nameif inside
+ip address 192.168.1.1 255.255.255.0
+security-level 100
+
+interface vlan 2
+nameif outside
+ip address 209.165.200.226 255.255.255.248
+no shutdown
+exit
+
+do show interface e0/0
+
+interface e0/1
+switchport access vlan 1
+no shutdown
+interface e0/0
+switchport access vlan 2
+no shutdown
+exit
+
+do show interface ip brief
+do show ip address
+
+do show switch vlan
+do show run interface vlan 1
+
+do ping 192.168.1.3
+
+http server enable
+http 192.168.1.0 255.255.255.0 inside
+
+! SW part
+
+! part 4
+route outside 0.0.0.0. 0.0.0.0 209.165.200.225
+do show route
+object network INSIDE-NET
+subnet 192.168.1.0 255.255.255.0
+nat (inside,outside) dynamic interface
+end
+
+do show run object
+do show run nat
+do show nat
+do show xlate
+
+exit
+show run | begin class
+
+conf t
+policy-map global_policy
+class inspection_default
+inspect icmp
+
+do show run policy-map
+
+! part 5
+dhcpd address 192.168.1.5-192.168.1.100 inside
+dhcpd address 192.168.1.5-192.168.1.36 inside
+dhcpd dns 209.165.201.2
+dhcpd option 3 ip 192.168.1.1
+
+dhcpd enable inside
+show run dhcpd
+
+username admin password cisco12345
+aaa authentication ssh console LOCAL
+
+crypto key generate rsa modulus 1024
+exit
+
+write mem
+
+conf t
+
+ssh 192.168.1.0 255.255.255.0 inside
+ssh 172.16.3.3 255.255.255.255 outside
+ssh timeout 10
+
+interface vlan 3
+ip address 192.168.2.1 255.255.255.0
+nameif dmz
+
+no forward interface vlan 1
+nameif dmz
+security-level 70
+no shutdown
+
+interface Ethernet0/2
+switchport access vlan 3
+no shut
+
+exit
+
+do show interface ip brief
+do show ip address
+do show switch vlan
+
+object network dmz-server
+host 192.168.2.3
+nat (dmz,outside) static 209.165.200.227
+exit
+
+access-list OUTSIDE-DMZ permit ip any host 192.168.2.3
+access-group OUTSIDE-DMZ in interface outside
+end
+
+do clear nat counters
+do show nat
+do show xlate
+do show run interface vlan 3

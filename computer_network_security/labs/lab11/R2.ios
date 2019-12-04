@@ -1,0 +1,45 @@
+!## PART 1 ##
+
+enable
+config t
+
+! Part 2, Step 3
+hostname R2
+
+! connected to ASA E0/0
+interface S0/0/0
+ip address 10.1.1.2 255.255.255.252
+no shutdown
+exit
+
+! connected to R2
+interface S0/0/1
+ip address 10.2.2.2 255.255.255.252
+clock rate 128000
+no shutdown
+exit
+
+no ip domain-lookup
+
+! Part 2, Step 3
+! route to R3
+ip route 172.16.3.0 255.255.255.0 10.2.2.1
+
+! route to R1
+ip route 209.165.200.224 255.255.255.248 10.1.1.1
+
+! route to R1 Loopback
+ip route 172.20.1.0 255.255.255.0 10.1.1.1
+
+! route to ASA
+
+! PART 3
+! step 1
+exit
+clock set 19:30:30 Nov 29 2019
+
+conf t
+ntp authentication-key 1 md5 NTPpassword
+ntp trusted-key 1
+ntp authenticate
+ntp master 3
