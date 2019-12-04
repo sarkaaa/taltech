@@ -1,3 +1,6 @@
+en
+conf t
+
 hostname R3
 security passwords min-length 10
 enable algorithm-type scrypt secret cisco12345

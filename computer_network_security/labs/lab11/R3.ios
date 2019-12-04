@@ -1,0 +1,107 @@
+! R3
+! Basic settings
+enable
+conf t
+hostname R3
+int g0/1
+ip address 172.16.3.1 255.255.255.0
+no shutdown
+exit
+int s0/0/1
+ip address 10.2.2.1 255.255.255.252
+no shutdown
+exit
+
+no ip domain-lookup
+
+! Configuring static routing
+ip route 0.0.0.0 0.0.0.0 10.2.2.2
+do copy running-config startup-config
+
+! part 3, task 1, step 1
+security passwords min-length 10
+
+! part 3, task 1, step 2
+service password-encryption
+
+! part 3, task 1, step 3
+banner motd #Unauthorized access strictly  prohibited and prosecuted to the full extent of the law!#
+
+! part 3, task 1, step 4
+enable algorithm-type scrypt secret cisco12345
+
+! part 3, task 1, step 5
+enable algorithm-type scrypt secret cisco12345
+username Admin01 privilege 15 algorithm-type scrypt secret Admin01pass55
+
+! part 3, task 1, step 6
+aaa new-model
+
+! part 3, task 1, step 7
+aaa authentication login default local
+aaa authorization exec default local
+
+! part 3, task 1, step 8
+line console 0
+exec-timeout 15 0
+privilege level 15
+exit
+
+! part 3, task 1, step 9
+line vty 0 4 
+transport input ssh
+exec-timeout 15 0
+privilege level 15
+exit
+
+! part 3, task 1, step 10
+logging on-failure log every 2
+logging on-success log every 1
+
+! part 3, task 1, step 11
+ip http server
+ip http authentication local
+
+! part 3, task 2, step 1
+ip domain-name ccnasecurity.com
+
+! part 3, task 2, step 2
+crypto key generate rsa general-keys modulus 1024
+
+! part 3, task 2, step 3
+ip ssh version 2
+
+! part 3, task 2, step 4
+ip ssh time-out 90
+ip ssh authentication-retries 2
+
+
+! part 3, task 3, step 1
+
+
+! missing from part 2:
+! step3b - simulated loopback
+
+
+
+! for R2
+! step 1
+clock set 19:30:30 Nov 29 2019
+ntp authentication-key 1 md5 NTPpassword
+ntp trusted-key 1
+ntp authenticate
+ntp master 3
+
+! step 2, for R3
+ntp authentication-key 1 md5 NTPpassword
+ntp trusted-key 1
+ntp authenticate
+ntp server 10.2.2.2
+ntp update-calendar
+
+do show ntp status
+
+! task 5, step 2
+service timestamps log datetime msec
+logging 172.16.3.3
+logging trap warning
