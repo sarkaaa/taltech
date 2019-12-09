@@ -44,6 +44,10 @@ show switch vlan
 http server enable
 http 192.168.1.0 255.255.255.0 inside
 
-! part 6, task 2, step 1
-!!! TO FINISH!
+! part 6, part 7, part 8
+! computer GUI, browser, etc.
+
+! part 9, task 1, step 1
+! Configure DHCP, address translation, and administrative access.
+
 
