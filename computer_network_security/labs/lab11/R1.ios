@@ -101,7 +101,7 @@ secure boot-image
 secure boot-config
 
 ! Part 3, Task 3, Step 3
-show secure bootset
+do show secure bootset
 !end
 !copy running-config startup-config
 !conf t

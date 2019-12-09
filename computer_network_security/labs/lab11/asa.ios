@@ -28,8 +28,8 @@ no shutdown
 interface vlan 3
 ip address 192.168.2.1 255.255.255.0
 security-level 70
-nameif dmz
 no forward interface vlan 1
+nameif dmz
 no shutdown
 
 interface Ethernet0/2
@@ -44,10 +44,8 @@ show switch vlan
 http server enable
 http 192.168.1.0 255.255.255.0 inside
 
-! part 6, part 7, part 8
+! part 6, task 2, part 7, part 8
 ! computer GUI, browser, etc.
 
 ! part 9, task 1, step 1
-! Configure DHCP, address translation, and administrative access.
-
-
+! router 3

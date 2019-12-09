@@ -74,8 +74,6 @@ ip ssh version 2
 ! part 3, task 2, step 4
 ip ssh time-out 90
 ip ssh authentication-retries 2
-exit
-
 
 ! part 3, task 4, step 2
 ntp authentication-key 1 md5 NTPpassword
@@ -196,3 +194,39 @@ dir flash:ipsdir
 
 show ip ips signature count
 show ip ips all
+
+! part 9, task 1, step 1
+crypto isakmp enable
+crypto isakmp policy 1
+
+authentication pre-share
+encryption 3des
+hash sha
+group 2
+end
+
+conf t
+crypto isakmp key Site2SiteKEY1 address 209.165.200.226
+
+do show crypto isakmp policy
+
+! part 9, task 1, step 2
+conf t
+crypto ipsec transform-set TRNSFRM-SET esp-3des esp-sha-hmac
+
+! part 9, task 1, step 3
+ip access-list extended 101
+remark Link to the CCNAS-ASA
+permit ip 172.16.3.0 0.0.0.255 192.168.1.0 0.0.0.255
+exit
+
+! part 9, task 1, step 4
+crypto map CMAP 1 ipsec-isakmp
+match address 101
+set peer 209.165.200.226
+set transform-set TRNSFRM-SET
+exit
+
+int s0/0/1
+crypto map CMAP
+end

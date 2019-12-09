@@ -37,9 +37,8 @@ crypto isakmp policy 10
 
 crypto isakmp policy 10
 authentication pre-share
-encryption pre-share
 encryption 3des
-hash share
+hash sha
 group 2
 end
 
