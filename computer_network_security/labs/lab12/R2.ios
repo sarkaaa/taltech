@@ -1,0 +1,22 @@
+en
+conf t
+
+hostname R2
+
+int s0/0/0
+ip address 10.1.1.2 255.255.255.252
+no shutdown
+exit
+
+int s0/0/01
+ip address 10.2.2.2 255.255.255.252
+clock rate 64000
+no shutdown
+exit
+
+router ospf 1
+network 10.1.1.0 0.0.0.3 area 0
+network 10.2.2.0 0.0.0.3 area 0
+exit
+
+no ip domain-lookup

@@ -1,0 +1,70 @@
+en
+conf t
+hostname R3
+no ip domain-lookup
+
+int s0/0/1
+ip address 10.2.2.1 255.255.255.252
+no shutdown
+exit
+
+int g0/1
+ip address 192.168.3.1 255.255.255.0
+no shutdown
+
+exit
+
+router ospf 1
+network 10.2.2.0 0.0.0.3 area 0
+passive-interface g0/1
+exit
+
+interface tunnel 0
+ip address 172.16.12.1 255.255.255.252
+tunnel source 10.2.2.1
+tunnel destination 10.1.1.1
+exit
+
+router eigrp 1
+network 172.16.12.0 0.0.0.3
+network 192.168.3.0 0.0.0.255
+passive-interface g0/1
+exit
+
+crypto isakmp enable
+
+crypto isakmp policy 10
+hash sha
+authentication pre-share
+group 14
+lifetime 3600
+encryption aes 256
+exit
+
+do show crypto isakmp policy
+
+crypto isakmp key cisco123 address 172.16.12.2
+
+crypto ipsec transform-set 50 esp-aes 256 esp-sha-hmac
+exit
+
+crypto ipsec security-association lifetime seconds 1800
+
+access-list 101 permit ip 192.168.3.0 0.0.0.255 192.168.1.0 0.0.0.255
+
+
+crypto map CMAP 10 ipsec-isakmp
+match address 101
+set peer 172.16.12.2
+set pfs group14
+set transform-set 50
+set security-association lifetime seconds 900
+exit
+
+interface Serial 0/0/1
+crypto map CMAP
+exit
+
+do show crypto ipsec transform-set
+do show crypto map
+do show crypto isakmp sa
