@@ -34,37 +34,60 @@ exit
 crypto isakmp enable
 
 crypto isakmp policy 10
-hash sha
 authentication pre-share
-group 14
-lifetime 3600
-encryption aes 256
 exit
 
 do show crypto isakmp policy
 
-crypto isakmp key cisco123 address 172.16.12.2
+crypto isakmp key cisco123 address 10.1.1.1
 
 crypto ipsec transform-set 50 esp-aes 256 esp-sha-hmac
+mode transport
+exit
+
+crypto ipsec profile VPN-PROFILE
+set transform-set 50
 exit
 
 crypto ipsec security-association lifetime seconds 1800
 
-access-list 101 permit ip 192.168.3.0 0.0.0.255 192.168.1.0 0.0.0.255
-
-
-crypto map CMAP 10 ipsec-isakmp
-match address 101
-set peer 172.16.12.2
-set pfs group14
-set transform-set 50
-set security-association lifetime seconds 900
+interface Tunnel0
+tunnel protection ipsec profile VPN-PROFILE
 exit
 
-interface Serial 0/0/1
-crypto map CMAP
-exit
+
+do sh run | s Tunnel
+
+
+do show crypto isakmp policy
+
 
 do show crypto ipsec transform-set
+
+
 do show crypto map
+
+
 do show crypto isakmp sa
+
+
+do show ip ospf neighbor
+
+
+do show ip eigrp neighbors
+
+
+do show ip route
+
+
+
+
+
+
+
+
+
+do debug crypto ipsec
+do debug crypto isakmp
+
+do undebug all
