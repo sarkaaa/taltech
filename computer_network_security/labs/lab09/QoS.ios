@@ -1,0 +1,69 @@
+! INTERNET ROUTER
+enable
+conf t
+hostname customer-b
+no ip-domain lookup
+
+! ISP network
+int g0/0
+ip address 10.1.1.3 255.255.255.0
+no shutdown
+exit
+
+! customer internal network
+int g0/1
+ip address 192.168.3.1 255.255.255.0
+no shutdown
+exit
+
+router ospf 1
+network 0.0.0.0 255.255.255.255 area 0
+
+!!!! lab itself !!!!
+
+access-list 101 permit tcp any any eq 5555
+access-list 102 permit icmp any any
+access-list 103 permit ip any any
+
+class-map TCP_IPERF
+match access-group 101
+exit
+
+class-map ICMP_IPERF
+match access-group 102
+exit
+
+class-map CUSTOMER
+match access-group 103
+exit
+
+policy-map CHILD
+class TCP_IPERF
+!It's in kbps
+bandwidth 12000
+exit
+
+class ICMP_IPERF
+!Cannot apply more than 20 percent because 12000 is already 80% and we cannot have 100%
+priority percent 18
+exit
+exit
+
+policy-map MASTER
+class class-default
+shape average 15m
+service-policy CHILD
+exit
+exit
+
+int g0/0
+service-policy output MASTER
+exit
+
+
+
+
+
+
+
+
