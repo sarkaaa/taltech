@@ -1,7 +1,7 @@
 en
 conf t
-
 hostname R1
+no ip domain-lookup
 
 int s0/0/0
 ip address 10.1.1.1 255.255.255.252
@@ -15,15 +15,15 @@ no shutdown
 exit
 
 router ospf 1
-network 10.1.1.0 0.0.0.3 area 0   
+network 10.1.1.0 0.0.0.3 area 0
+passive-interface g0/0   
 exit
-
-no ip domain-lookup
 
 interface tunnel 0
 ip address 172.16.12.2 255.255.255.252
 tunnel source s0/0/0
 tunnel destination 10.2.2.1
+exit
 
 router eigrp 1
 network 192.168.1.0 0.0.0.255
@@ -32,9 +32,15 @@ passive-interface g0/0
 exit
 
 crypto isakmp enable
+
+crypto isakmp policy 10
+authentication pre-share
+exit
+
 do show crypto isakmp policy
 
-crypto isakmp key cisco123 address 172.16.12.1
+crypto isakmp key cisco123 address 10.2.2.1
+
 crypto ipsec transform-set 50 esp-aes 256 esp-sha-hmac
 mode transport
 exit
